@@ -1,7 +1,21 @@
+import About from "./components/About"
+import Contact from "./components/Contact"
+import Experience from "./components/Experience"
+import Hero from "./components/Hero"
+import Navbar from "./components/Navbar"
+import Projects from "./components/Projects"
+import TechStack from "./components/TechStack"
+
 function App() {
   return (
-    <main className="min-h-screen bg-bg-primary text-text-primary">
-      <p className="p-10 text-text-secondary">Portfolio scaffold ready.</p>
+    <main className="bg-bg-primary text-text-primary">
+      <Navbar />
+      <Hero />
+      <About />
+      <TechStack />
+      <Projects />
+      <Experience />
+      <Contact />
     </main>
   )
 }
