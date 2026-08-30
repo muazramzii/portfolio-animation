@@ -1,30 +1,48 @@
-import { motion, useMotionValue, useSpring } from "framer-motion"
-import { useEffect, useState } from "react"
+import {
+  motion,
+  useMotionValue,
+  useSpring,
+  useTransform,
+  type MotionValue,
+} from "framer-motion"
+import { useState } from "react"
 import { portraitSrc } from "../data/content"
 import { useInViewport } from "../hooks/useInViewport"
+import { usePrefersReducedMotion } from "../hooks/usePrefersReducedMotion"
+import { ENTRANCE_EASE } from "../lib/motion"
 
-// mouse-parallax bounds and spring feel, per the animation spec
+// mouse-parallax tilt bounds and spring feel, per the animation spec
 const MAX_TILT_X = 6 // rotateX, degrees
 const MAX_TILT_Y = 8 // rotateY, degrees
-const SPRING = { stiffness: 150, damping: 18, mass: 0.6 }
+const TILT_SPRING = { stiffness: 150, damping: 18, mass: 0.6 }
 
-export default function HeroCharacter() {
+// depth-parallax movement budgets, in px, for this component's two layers
+const CHARACTER_MOVE = 12
+const RING_MOVE = 16
+
+// platform's resting offset and how far it rises in on entrance
+const PLATFORM_Y = -12
+const PLATFORM_RISE = 14
+
+type HeroCharacterProps = {
+  parallaxX: MotionValue<number>
+  parallaxY: MotionValue<number>
+}
+
+export default function HeroCharacter({ parallaxX, parallaxY }: HeroCharacterProps) {
   const { ref: stageRef, inView } = useInViewport<HTMLDivElement>()
   const [imgFailed, setImgFailed] = useState(false)
-  const [reducedMotion, setReducedMotion] = useState(false)
+  const reducedMotion = usePrefersReducedMotion()
 
   const rawRotateX = useMotionValue(0)
   const rawRotateY = useMotionValue(0)
-  const springRotateX = useSpring(rawRotateX, SPRING)
-  const springRotateY = useSpring(rawRotateY, SPRING)
+  const springRotateX = useSpring(rawRotateX, TILT_SPRING)
+  const springRotateY = useSpring(rawRotateY, TILT_SPRING)
 
-  useEffect(() => {
-    const query = window.matchMedia("(prefers-reduced-motion: reduce)")
-    const onChange = () => setReducedMotion(query.matches)
-    onChange()
-    query.addEventListener("change", onChange)
-    return () => query.removeEventListener("change", onChange)
-  }, [])
+  const characterX = useTransform(parallaxX, [-0.5, 0.5], [-CHARACTER_MOVE, CHARACTER_MOVE])
+  const characterY = useTransform(parallaxY, [-0.5, 0.5], [-CHARACTER_MOVE, CHARACTER_MOVE])
+  const ringX = useTransform(parallaxX, [-0.5, 0.5], [-RING_MOVE, RING_MOVE])
+  const ringY = useTransform(parallaxY, [-0.5, 0.5], [-RING_MOVE, RING_MOVE])
 
   const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
     if (reducedMotion) return
@@ -52,42 +70,73 @@ export default function HeroCharacter() {
       }`}
       style={{ perspective: "1400px" }}
     >
-      {/* orbit ring, around the waist, spinning opposite to the sway */}
-      <svg
-        viewBox="0 0 400 400"
-        preserveAspectRatio="none"
-        className="animate-spin-slow-reverse pointer-events-none absolute inset-0 h-full w-full"
-        style={{ filter: "drop-shadow(0 0 6px rgba(96,165,250,0.45))" }}
+      {/* orbit ring, depth layer 4: around the waist, spins opposite the sway, draws itself in at 900ms */}
+      <motion.div
+        className="pointer-events-none absolute inset-0 h-full w-full"
+        style={{ x: ringX, y: ringY }}
       >
-        <ellipse
-          cx="200"
-          cy="232"
-          rx="176"
-          ry="34"
-          fill="none"
-          stroke="var(--color-accent-soft)"
-          strokeWidth="1.5"
-          opacity="0.35"
-        />
-      </svg>
+        <svg
+          viewBox="0 0 400 400"
+          preserveAspectRatio="none"
+          className="animate-spin-slow-reverse h-full w-full"
+          style={{ filter: "drop-shadow(0 0 6px rgba(96,165,250,0.45))" }}
+        >
+          <motion.ellipse
+            cx="200"
+            cy="232"
+            rx="176"
+            ry="34"
+            fill="none"
+            stroke="var(--color-accent-soft)"
+            strokeWidth="1.5"
+            initial={{ pathLength: 0, opacity: 0 }}
+            animate={{ pathLength: 1, opacity: 0.35 }}
+            transition={{ delay: 0.9, duration: 1.1, ease: ENTRANCE_EASE }}
+          />
+        </svg>
+      </motion.div>
 
-      {/* ambient studio glow, upper-left spotlight */}
+      {/* cinematic spotlight: very subtle, drifts upper-left -> center over 15s, loops */}
       <div
-        className="pointer-events-none absolute -inset-10 rounded-full blur-3xl"
+        className="animate-spotlight pointer-events-none absolute -inset-16 rounded-full blur-3xl"
         style={{
-          background:
-            "radial-gradient(circle at 30% 20%, rgba(96,165,250,0.28), transparent 60%)",
+          background: "radial-gradient(circle, rgba(96,165,250,0.3) 0%, transparent 65%)",
+          backgroundSize: "70% 70%",
+          backgroundRepeat: "no-repeat",
         }}
       />
 
-      {/* holographic platform: fixed in place so the character floats above it */}
-      <div className="pointer-events-none absolute top-full left-1/2 h-12 w-[80%] -translate-x-1/2 -translate-y-3">
-        <div className="absolute inset-0 rounded-[50%] bg-accent/25 blur-2xl" />
-        <div className="absolute inset-x-[12%] top-1/2 h-3 -translate-y-1/2 rounded-[50%] border border-white/10 bg-white/[0.06] blur-[1px]" />
-        <div className="absolute inset-x-[20%] top-[85%] h-2 rounded-[50%] bg-black/40 blur-md" />
-      </div>
+      {/* soft radial backlight behind the character — feathered, no visible boundary */}
+      <div
+        className="pointer-events-none absolute top-1/2 left-1/2 h-[95%] w-[95%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[70px]"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(59,130,246,0.22) 0%, rgba(59,130,246,0.08) 45%, transparent 72%)",
+        }}
+      />
 
-      {/* soft reflection of the character on the platform */}
+      {/* holographic platform: fixed in place so the character floats above it, rises in at 600ms */}
+      <motion.div
+        className="pointer-events-none absolute top-full h-14 w-[82%]"
+        style={{ left: "50%", x: "-50%" }}
+        initial={{ opacity: 0, y: PLATFORM_Y + PLATFORM_RISE }}
+        animate={{ opacity: 1, y: PLATFORM_Y }}
+        transition={{ delay: 0.6, duration: 0.7, ease: ENTRANCE_EASE }}
+      >
+        {/* ambient blue glow beneath */}
+        <div className="absolute inset-0 rounded-[50%] bg-accent/25 blur-2xl" />
+        {/* glass disc edge with a blue glow */}
+        <div
+          className="absolute inset-x-[10%] top-1/2 h-3.5 -translate-y-1/2 rounded-[50%] border border-accent-soft/40 bg-white/[0.06] blur-[0.5px]"
+          style={{ boxShadow: "0 0 18px 2px rgba(96,165,250,0.35)" }}
+        />
+        {/* inner glass highlight, top sheen */}
+        <div className="absolute inset-x-[24%] top-[30%] h-1 rounded-full bg-gradient-to-r from-transparent via-white/40 to-transparent blur-[1px]" />
+        {/* soft contact shadow */}
+        <div className="absolute inset-x-[20%] top-[85%] h-2 rounded-[50%] bg-black/40 blur-md" />
+      </motion.div>
+
+      {/* soft reflection of the character, blurred mirror beneath the shoes */}
       <div
         className="pointer-events-none absolute top-full left-1/2 h-full w-full -translate-x-1/2 opacity-25 blur-sm"
         style={{
@@ -107,51 +156,51 @@ export default function HeroCharacter() {
         )}
       </div>
 
-      {/* float: independent vertical bob */}
-      <div className="animate-float relative h-full w-full">
-        {/* sway: -18deg to +18deg yaw, 8s ease-in-out infinite alternate */}
-        <div
-          className="animate-hero-sway relative h-full w-full"
-          style={{ transformStyle: "preserve-3d" }}
-        >
-          {/* breathing: very subtle scale pulse */}
+      {/* character, depth layer 3: fades in with a scale pop at 1200ms */}
+      <motion.div
+        className="relative h-full w-full"
+        style={{ x: characterX, y: characterY }}
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 1.2, duration: 0.8, ease: ENTRANCE_EASE }}
+      >
+        {/* float: independent vertical bob */}
+        <div className="animate-float relative h-full w-full">
+          {/* sway: -18deg to +18deg yaw, 8s ease-in-out infinite alternate */}
           <div
-            className="animate-hero-breathe relative h-full w-full"
+            className="animate-hero-sway relative h-full w-full"
             style={{ transformStyle: "preserve-3d" }}
           >
-            {/* mouse parallax: spring-eased tilt, disabled under reduced motion */}
-            <motion.div
-              className="relative h-full w-full"
-              style={{
-                transformStyle: "preserve-3d",
-                rotateX: springRotateX,
-                rotateY: springRotateY,
-              }}
+            {/* breathing: very subtle scale pulse */}
+            <div
+              className="animate-hero-breathe relative h-full w-full"
+              style={{ transformStyle: "preserve-3d" }}
             >
-              {/* rim light behind character */}
-              <div
-                className="pointer-events-none absolute inset-x-6 top-4 bottom-16 rounded-[3rem]"
+              {/* mouse parallax: spring-eased tilt, disabled under reduced motion */}
+              <motion.div
+                className="relative h-full w-full"
                 style={{
-                  boxShadow:
-                    "0 0 80px 10px rgba(59,130,246,0.35), inset 0 0 60px rgba(255,255,255,0.03)",
+                  transformStyle: "preserve-3d",
+                  rotateX: springRotateX,
+                  rotateY: springRotateY,
                 }}
-              />
-
-              {imgFailed ? (
-                <PlaceholderSilhouette />
-              ) : (
-                <img
-                  src={portraitSrc}
-                  alt="Muaz Ramzi — Software Engineer, in a formal suit holding a laptop"
-                  className="relative z-10 h-full w-full select-none object-contain object-bottom drop-shadow-[0_30px_40px_rgba(0,0,0,0.55)]"
-                  draggable={false}
-                  onError={() => setImgFailed(true)}
-                />
-              )}
-            </motion.div>
+              >
+                {imgFailed ? (
+                  <PlaceholderSilhouette />
+                ) : (
+                  <img
+                    src={portraitSrc}
+                    alt="Muaz Ramzi — Software Engineer, in a formal suit holding a laptop"
+                    className="relative z-10 h-full w-full select-none object-contain object-bottom drop-shadow-[0_30px_40px_rgba(0,0,0,0.55)]"
+                    draggable={false}
+                    onError={() => setImgFailed(true)}
+                  />
+                )}
+              </motion.div>
+            </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* floating particles */}
       {PARTICLES.map((p, i) => (
