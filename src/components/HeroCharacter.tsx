@@ -1,24 +1,45 @@
-import { useState } from "react"
+import { motion, useMotionValue, useSpring } from "framer-motion"
+import { useEffect, useState } from "react"
 import { portraitSrc } from "../data/content"
 import { useInViewport } from "../hooks/useInViewport"
 
-const MAX_TILT = 6
+const MAX_TILT_X = 6
+const MAX_TILT_Y = 8
+const SPRING = { stiffness: 150, damping: 18, mass: 0.6 }
 
 export default function HeroCharacter() {
   const { ref: stageRef, inView } = useInViewport<HTMLDivElement>()
-  const [tilt, setTilt] = useState({ x: 0, y: 0 })
   const [imgFailed, setImgFailed] = useState(false)
+  const [reducedMotion, setReducedMotion] = useState(false)
+
+  const rawRotateX = useMotionValue(0)
+  const rawRotateY = useMotionValue(0)
+  const springRotateX = useSpring(rawRotateX, SPRING)
+  const springRotateY = useSpring(rawRotateY, SPRING)
+
+  useEffect(() => {
+    const query = window.matchMedia("(prefers-reduced-motion: reduce)")
+    const onChange = () => setReducedMotion(query.matches)
+    onChange()
+    query.addEventListener("change", onChange)
+    return () => query.removeEventListener("change", onChange)
+  }, [])
 
   const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (reducedMotion) return
     const stage = stageRef.current
     if (!stage) return
     const rect = stage.getBoundingClientRect()
     const px = (event.clientX - rect.left) / rect.width - 0.5
     const py = (event.clientY - rect.top) / rect.height - 0.5
-    setTilt({ x: py * -MAX_TILT * 2, y: px * MAX_TILT * 2 })
+    rawRotateX.set(py * -MAX_TILT_X * 2)
+    rawRotateY.set(px * MAX_TILT_Y * 2)
   }
 
-  const handleMouseLeave = () => setTilt({ x: 0, y: 0 })
+  const handleMouseLeave = () => {
+    rawRotateX.set(0)
+    rawRotateY.set(0)
+  }
 
   return (
     <div
@@ -30,34 +51,22 @@ export default function HeroCharacter() {
       }`}
       style={{ perspective: "1400px" }}
     >
-      {/* orbit rings */}
+      {/* orbit ring, around the waist, spinning opposite to the sway */}
       <svg
         viewBox="0 0 400 400"
-        className="animate-spin-slow pointer-events-none absolute inset-0 h-full w-full opacity-60"
+        preserveAspectRatio="none"
+        className="animate-spin-slow-reverse pointer-events-none absolute inset-0 h-full w-full"
+        style={{ filter: "drop-shadow(0 0 6px rgba(96,165,250,0.45))" }}
       >
         <ellipse
           cx="200"
-          cy="200"
-          rx="190"
-          ry="150"
+          cy="232"
+          rx="176"
+          ry="34"
           fill="none"
           stroke="var(--color-accent-soft)"
-          strokeWidth="1"
-          strokeDasharray="2 10"
-        />
-      </svg>
-      <svg
-        viewBox="0 0 400 400"
-        className="animate-spin-slow-reverse pointer-events-none absolute inset-0 h-full w-full opacity-40"
-      >
-        <ellipse
-          cx="200"
-          cy="200"
-          rx="150"
-          ry="185"
-          fill="none"
-          stroke="var(--color-accent)"
-          strokeWidth="1"
+          strokeWidth="1.5"
+          opacity="0.35"
         />
       </svg>
 
@@ -70,45 +79,75 @@ export default function HeroCharacter() {
         }}
       />
 
+      {/* holographic platform: fixed in place so the character floats above it */}
+      <div className="pointer-events-none absolute top-full left-1/2 h-12 w-[80%] -translate-x-1/2 -translate-y-3">
+        <div className="absolute inset-0 rounded-[50%] bg-accent/25 blur-2xl" />
+        <div className="absolute inset-x-[12%] top-1/2 h-3 -translate-y-1/2 rounded-[50%] border border-white/10 bg-white/[0.06] blur-[1px]" />
+        <div className="absolute inset-x-[20%] top-[85%] h-2 rounded-[50%] bg-black/40 blur-md" />
+      </div>
+
+      {/* soft reflection of the character on the platform */}
+      <div
+        className="pointer-events-none absolute top-full left-1/2 h-full w-full -translate-x-1/2 opacity-25 blur-sm"
+        style={{
+          maskImage: "linear-gradient(to bottom, rgba(0,0,0,0.45), transparent 40%)",
+          WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,0.45), transparent 40%)",
+        }}
+      >
+        {!imgFailed && (
+          <img
+            src={portraitSrc}
+            alt=""
+            aria-hidden
+            draggable={false}
+            className="h-full w-full object-contain object-top"
+            style={{ transform: "scaleY(-1)" }}
+          />
+        )}
+      </div>
+
       {/* float: independent vertical bob */}
       <div className="animate-float relative h-full w-full">
-        {/* idle: slow autonomous yaw sway, "one rotation" every 24s */}
+        {/* sway: -18deg to +18deg yaw, 8s ease-in-out infinite alternate */}
         <div
-          className="animate-hero-idle relative h-full w-full"
+          className="animate-hero-sway relative h-full w-full"
           style={{ transformStyle: "preserve-3d" }}
         >
-          {/* mouse parallax: extra tilt layered on top, max +/-6deg */}
+          {/* breathing: very subtle scale pulse */}
           <div
-            className="relative h-full w-full transition-transform duration-300 ease-out"
-            style={{
-              transformStyle: "preserve-3d",
-              transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
-            }}
+            className="animate-hero-breathe relative h-full w-full"
+            style={{ transformStyle: "preserve-3d" }}
           >
-            {/* rim light behind character */}
-            <div
-              className="pointer-events-none absolute inset-x-6 top-4 bottom-16 rounded-[3rem]"
+            {/* mouse parallax: spring-eased tilt, disabled under reduced motion */}
+            <motion.div
+              className="relative h-full w-full"
               style={{
-                boxShadow:
-                  "0 0 80px 10px rgba(59,130,246,0.35), inset 0 0 60px rgba(255,255,255,0.03)",
+                transformStyle: "preserve-3d",
+                rotateX: springRotateX,
+                rotateY: springRotateY,
               }}
-            />
-
-            {imgFailed ? (
-              <PlaceholderSilhouette />
-            ) : (
-              <img
-                src={portraitSrc}
-                alt="Muaz Ramzi — 3D rendered portrait in a formal suit"
-                className="relative z-10 h-full w-full select-none object-contain object-bottom drop-shadow-[0_30px_40px_rgba(0,0,0,0.55)]"
-                draggable={false}
-                onError={() => setImgFailed(true)}
+            >
+              {/* rim light behind character */}
+              <div
+                className="pointer-events-none absolute inset-x-6 top-4 bottom-16 rounded-[3rem]"
+                style={{
+                  boxShadow:
+                    "0 0 80px 10px rgba(59,130,246,0.35), inset 0 0 60px rgba(255,255,255,0.03)",
+                }}
               />
-            )}
 
-            {/* reflective ground platform */}
-            <div className="absolute bottom-2 left-1/2 h-8 w-[70%] -translate-x-1/2 rounded-full bg-accent/30 blur-2xl" />
-            <div className="absolute bottom-4 left-1/2 h-2 w-[55%] -translate-x-1/2 rounded-full bg-accent-glow/60 blur-md" />
+              {imgFailed ? (
+                <PlaceholderSilhouette />
+              ) : (
+                <img
+                  src={portraitSrc}
+                  alt="Muaz Ramzi — Software Engineer, in a formal suit holding a laptop"
+                  className="relative z-10 h-full w-full select-none object-contain object-bottom drop-shadow-[0_30px_40px_rgba(0,0,0,0.55)]"
+                  draggable={false}
+                  onError={() => setImgFailed(true)}
+                />
+              )}
+            </motion.div>
           </div>
         </div>
       </div>
