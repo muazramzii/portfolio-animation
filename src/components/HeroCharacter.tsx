@@ -1,9 +1,10 @@
-import { useRef, useState } from "react"
+import { useState } from "react"
+import { useInViewport } from "../hooks/useInViewport"
 
 const MAX_TILT = 6
 
 export default function HeroCharacter() {
-  const stageRef = useRef<HTMLDivElement>(null)
+  const { ref: stageRef, inView } = useInViewport<HTMLDivElement>()
   const [tilt, setTilt] = useState({ x: 0, y: 0 })
   const [imgFailed, setImgFailed] = useState(false)
 
@@ -23,7 +24,9 @@ export default function HeroCharacter() {
       ref={stageRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      className="relative mx-auto flex h-[420px] w-[320px] items-center justify-center sm:h-[520px] sm:w-[400px] lg:h-[620px] lg:w-[480px]"
+      className={`relative mx-auto flex h-[420px] w-[320px] items-center justify-center sm:h-[520px] sm:w-[400px] lg:h-[620px] lg:w-[480px] ${
+        inView ? "" : "[&_*]:![animation-play-state:paused]"
+      }`}
       style={{ perspective: "1400px" }}
     >
       {/* orbit rings */}
