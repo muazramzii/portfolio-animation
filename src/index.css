@@ -21,6 +21,7 @@
   --animate-spin-slow-reverse: spin-slow-reverse 32s linear infinite;
   --animate-fade-up: fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-blink: blink 1.8s ease-in-out infinite;
+  --animate-hero-idle: hero-idle 24s ease-in-out infinite;
 
   @keyframes float {
     0%,
@@ -68,6 +69,15 @@
       transform: translateY(6px);
     }
   }
+  @keyframes hero-idle {
+    0%,
+    100% {
+      transform: rotateY(-14deg);
+    }
+    50% {
+      transform: rotateY(14deg);
+    }
+  }
 }
 
 html {
@@ -84,6 +94,25 @@ body {
 ::selection {
   background-color: var(--color-accent);
   color: var(--color-bg-primary);
+}
+
+/* keeps anchor-linked section headings clear of the fixed navbar */
+section[id] {
+  scroll-margin-top: 88px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }
 
 /* subtle grain so flat dark surfaces don't look sterile */
