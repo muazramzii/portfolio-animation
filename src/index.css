@@ -101,6 +101,20 @@ section[id] {
   scroll-margin-top: 88px;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
 /* subtle grain so flat dark surfaces don't look sterile */
 .noise-overlay {
   position: absolute;
