@@ -24,6 +24,7 @@
   --animate-hero-sway: hero-sway 8s ease-in-out infinite alternate;
   --animate-hero-breathe: hero-breathe 5s ease-in-out infinite;
   --animate-noise: noise-flicker 6s ease-in-out infinite;
+  --animate-spotlight: spotlight-drift 15s ease-in-out infinite alternate;
 
   @keyframes float {
     0%,
@@ -95,6 +96,14 @@
     }
     50% {
       opacity: 0.05;
+    }
+  }
+  @keyframes spotlight-drift {
+    0% {
+      background-position: 8% 6%;
+    }
+    100% {
+      background-position: 46% 38%;
     }
   }
 }
