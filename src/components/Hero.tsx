@@ -1,6 +1,7 @@
-import { Github, Linkedin, Mail } from "lucide-react"
+import { Mail } from "lucide-react"
 import { socials } from "../data/content"
 import HeroCharacter from "./HeroCharacter"
+import { GithubIcon, LinkedinIcon } from "./icons"
 import ScrollIndicator from "./ScrollIndicator"
 
 export default function Hero() {
@@ -64,7 +65,7 @@ export default function Hero() {
               aria-label="GitHub"
               className="text-text-secondary transition-colors hover:text-accent-soft"
             >
-              <Github size={20} />
+              <GithubIcon size={20} />
             </a>
             <a
               href={socials.linkedin}
@@ -73,7 +74,7 @@ export default function Hero() {
               aria-label="LinkedIn"
               className="text-text-secondary transition-colors hover:text-accent-soft"
             >
-              <Linkedin size={20} />
+              <LinkedinIcon size={20} />
             </a>
             <a
               href={`mailto:${socials.email}`}
