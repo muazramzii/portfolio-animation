@@ -3,8 +3,9 @@ import { useEffect, useState } from "react"
 import { portraitSrc } from "../data/content"
 import { useInViewport } from "../hooks/useInViewport"
 
-const MAX_TILT_X = 6
-const MAX_TILT_Y = 8
+// mouse-parallax bounds and spring feel, per the animation spec
+const MAX_TILT_X = 6 // rotateX, degrees
+const MAX_TILT_Y = 8 // rotateY, degrees
 const SPRING = { stiffness: 150, damping: 18, mass: 0.6 }
 
 export default function HeroCharacter() {
