@@ -12,6 +12,8 @@ export const navItems: NavItem[] = [
   { label: "Contact", href: "#contact" },
 ]
 
+export const portraitSrc = "/character.png"
+
 export const socials = {
   github: "https://github.com/muazramzii",
   linkedin: "https://linkedin.com/in/muazramzi",

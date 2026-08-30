@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { portraitSrc } from "../data/content"
 import { useInViewport } from "../hooks/useInViewport"
 
 const MAX_TILT = 6
@@ -97,7 +98,7 @@ export default function HeroCharacter() {
               <PlaceholderSilhouette />
             ) : (
               <img
-                src="/character.png"
+                src={portraitSrc}
                 alt="Muaz Ramzi — 3D rendered portrait in a formal suit"
                 className="relative z-10 h-full w-full select-none object-contain object-bottom drop-shadow-[0_30px_40px_rgba(0,0,0,0.55)]"
                 draggable={false}

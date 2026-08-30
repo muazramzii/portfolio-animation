@@ -1,4 +1,4 @@
-import { stats } from "../data/content"
+import { portraitSrc, stats } from "../data/content"
 
 export default function About() {
   return (
@@ -20,7 +20,7 @@ export default function About() {
               }}
             />
             <img
-              src="/character.png"
+              src={portraitSrc}
               alt="Muaz Ramzi portrait"
               className="relative z-10 h-full w-full object-cover object-top opacity-90"
               onError={(e) => {
