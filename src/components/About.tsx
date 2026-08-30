@@ -19,14 +19,26 @@ export default function About() {
                   "radial-gradient(circle at 30% 20%, rgba(59,130,246,0.25), transparent 65%)",
               }}
             />
-            <img
-              src={portraitSrc}
-              alt="Muaz Ramzi portrait"
-              className="relative z-10 h-full w-full object-cover object-top opacity-90"
-              onError={(e) => {
-                e.currentTarget.style.display = "none"
-              }}
-            />
+            <div className="animate-float relative z-10 h-full w-full">
+              <div
+                className="animate-hero-sway relative h-full w-full"
+                style={{ transformStyle: "preserve-3d" }}
+              >
+                <div
+                  className="animate-hero-breathe relative h-full w-full"
+                  style={{ transformStyle: "preserve-3d" }}
+                >
+                  <img
+                    src={portraitSrc}
+                    alt="Muaz Ramzi portrait"
+                    className="h-full w-full object-contain object-bottom"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none"
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
