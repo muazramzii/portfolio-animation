@@ -44,6 +44,8 @@ export default function HeroCharacter({ parallaxX, parallaxY }: HeroCharacterPro
   const ringX = useTransform(parallaxX, [-0.5, 0.5], [-RING_MOVE, RING_MOVE])
   const ringY = useTransform(parallaxY, [-0.5, 0.5], [-RING_MOVE, RING_MOVE])
 
+  // local tilt on hover, independent of the section-wide depth-parallax
+  // pointer tracking in Hero.tsx (parallaxX/parallaxY are passed in as props)
   const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
     if (reducedMotion) return
     const stage = stageRef.current
