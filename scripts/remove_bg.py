@@ -9,8 +9,10 @@ import numpy as np
 from PIL import Image, ImageFilter
 from scipy import ndimage
 
-SRC = "public/character-source.png"
+SRC = "assets-source/character-source.png"
 DST = "public/character.png"
+# thresholds are hand-tuned to this specific studio photo (near-white paper
+# background, soft grey drop-shadow) — re-check them if the source photo changes
 WHITE_THRESHOLD = 233
 PADDING_FRAC = 0.02
 
