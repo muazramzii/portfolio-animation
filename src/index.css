@@ -96,6 +96,11 @@ body {
   color: var(--color-bg-primary);
 }
 
+/* keeps anchor-linked section headings clear of the fixed navbar */
+section[id] {
+  scroll-margin-top: 88px;
+}
+
 /* subtle grain so flat dark surfaces don't look sterile */
 .noise-overlay {
   position: absolute;
