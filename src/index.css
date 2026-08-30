@@ -16,12 +16,14 @@
   --color-text-primary: #f9fafb;
   --color-text-secondary: #9ca3af;
 
-  --animate-float: float 4s ease-in-out infinite;
+  --animate-float: float 4.5s ease-in-out infinite;
   --animate-spin-slow: spin-slow 26s linear infinite;
   --animate-spin-slow-reverse: spin-slow-reverse 32s linear infinite;
   --animate-fade-up: fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-blink: blink 1.8s ease-in-out infinite;
-  --animate-hero-idle: hero-idle 24s ease-in-out infinite;
+  --animate-hero-sway: hero-sway 8s ease-in-out infinite alternate;
+  --animate-hero-breathe: hero-breathe 5s ease-in-out infinite;
+  --animate-noise: noise-flicker 6s ease-in-out infinite;
 
   @keyframes float {
     0%,
@@ -69,13 +71,30 @@
       transform: translateY(6px);
     }
   }
-  @keyframes hero-idle {
+  @keyframes hero-sway {
+    from {
+      transform: rotateY(-18deg);
+    }
+    to {
+      transform: rotateY(18deg);
+    }
+  }
+  @keyframes hero-breathe {
     0%,
     100% {
-      transform: rotateY(-14deg);
+      transform: scale(1);
     }
     50% {
-      transform: rotateY(14deg);
+      transform: scale(1.015);
+    }
+  }
+  @keyframes noise-flicker {
+    0%,
+    100% {
+      opacity: 0.03;
+    }
+    50% {
+      opacity: 0.05;
     }
   }
 }
