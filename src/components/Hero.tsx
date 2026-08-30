@@ -11,7 +11,7 @@ export default function Hero() {
       className="relative flex min-h-screen items-center overflow-hidden pt-24"
     >
       <div className="grid-overlay absolute inset-0 [mask-image:radial-gradient(ellipse_at_center,black,transparent_75%)]" />
-      <div className="noise-overlay" />
+      <div className="noise-overlay animate-noise" />
 
       {/* huge background wordmark */}
       <div
