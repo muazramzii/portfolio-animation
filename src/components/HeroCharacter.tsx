@@ -1,24 +1,13 @@
-import {
-  motion,
-  useMotionValue,
-  useSpring,
-  useTransform,
-  type MotionValue,
-} from "framer-motion"
+import { motion, useTransform, type MotionValue } from "framer-motion"
 import { useState } from "react"
 import { portraitSrc } from "../data/content"
 import { useInViewport } from "../hooks/useInViewport"
-import { usePrefersReducedMotion } from "../hooks/usePrefersReducedMotion"
 import { ENTRANCE_EASE } from "../lib/motion"
 
-// mouse-parallax tilt bounds and spring feel, per the animation spec
-const MAX_TILT_X = 6 // rotateX, degrees
-const MAX_TILT_Y = 8 // rotateY, degrees
-const TILT_SPRING = { stiffness: 150, damping: 18, mass: 0.6 }
-
-// depth-parallax movement budgets, in px, for this component's two layers
-const CHARACTER_MOVE = 12
-const RING_MOVE = 16
+// camera-parallax movement budgets, in px, for this component's two layers —
+// the camera moves, not the body: pure translation, never rotation
+const CHARACTER_MOVE = 6
+const RING_MOVE = 10
 
 // platform's resting offset and how far it rises in on entrance
 const PLATFORM_Y = -12
@@ -32,47 +21,21 @@ type HeroCharacterProps = {
 export default function HeroCharacter({ parallaxX, parallaxY }: HeroCharacterProps) {
   const { ref: stageRef, inView } = useInViewport<HTMLDivElement>()
   const [imgFailed, setImgFailed] = useState(false)
-  const reducedMotion = usePrefersReducedMotion()
-
-  const rawRotateX = useMotionValue(0)
-  const rawRotateY = useMotionValue(0)
-  const springRotateX = useSpring(rawRotateX, TILT_SPRING)
-  const springRotateY = useSpring(rawRotateY, TILT_SPRING)
 
   const characterX = useTransform(parallaxX, [-0.5, 0.5], [-CHARACTER_MOVE, CHARACTER_MOVE])
   const characterY = useTransform(parallaxY, [-0.5, 0.5], [-CHARACTER_MOVE, CHARACTER_MOVE])
   const ringX = useTransform(parallaxX, [-0.5, 0.5], [-RING_MOVE, RING_MOVE])
   const ringY = useTransform(parallaxY, [-0.5, 0.5], [-RING_MOVE, RING_MOVE])
 
-  // local tilt on hover, independent of the section-wide depth-parallax
-  // pointer tracking in Hero.tsx (parallaxX/parallaxY are passed in as props)
-  const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (reducedMotion) return
-    const stage = stageRef.current
-    if (!stage) return
-    const rect = stage.getBoundingClientRect()
-    const px = (event.clientX - rect.left) / rect.width - 0.5
-    const py = (event.clientY - rect.top) / rect.height - 0.5
-    rawRotateX.set(py * -MAX_TILT_X * 2)
-    rawRotateY.set(px * MAX_TILT_Y * 2)
-  }
-
-  const handleMouseLeave = () => {
-    rawRotateX.set(0)
-    rawRotateY.set(0)
-  }
-
   return (
     <div
       ref={stageRef}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
       className={`relative mx-auto flex h-[420px] w-[320px] items-center justify-center sm:h-[520px] sm:w-[400px] lg:h-[620px] lg:w-[480px] ${
         inView ? "" : "[&_*]:![animation-play-state:paused]"
       }`}
       style={{ perspective: "1400px" }}
     >
-      {/* orbit ring, depth layer 4: around the waist, spins opposite the sway, draws itself in at 900ms */}
+      {/* orbit ring, camera-parallax layer: around the waist, spins opposite the sway, draws itself in at 900ms */}
       <motion.div
         className="pointer-events-none absolute inset-0 h-full w-full"
         style={{ x: ringX, y: ringY }}
@@ -126,24 +89,24 @@ export default function HeroCharacter({ parallaxX, parallaxY }: HeroCharacterPro
         transition={{ delay: 0.6, duration: 0.7, ease: ENTRANCE_EASE }}
       >
         {/* ambient blue glow beneath */}
-        <div className="absolute inset-0 rounded-[50%] bg-accent/25 blur-2xl" />
-        {/* glass disc edge with a blue glow */}
+        <div className="absolute inset-0 rounded-[50%] bg-accent/20 blur-2xl" />
+        {/* glass disc edge — softened, wider glow, lower opacity */}
         <div
-          className="absolute inset-x-[10%] top-1/2 h-3.5 -translate-y-1/2 rounded-[50%] border border-accent-soft/40 bg-white/[0.06] blur-[0.5px]"
-          style={{ boxShadow: "0 0 18px 2px rgba(96,165,250,0.35)" }}
+          className="absolute inset-x-[10%] top-1/2 h-3.5 -translate-y-1/2 rounded-[50%] border border-accent-soft/25 bg-white/[0.05] blur-[1px]"
+          style={{ boxShadow: "0 0 26px 4px rgba(96,165,250,0.22)" }}
         />
         {/* inner glass highlight, top sheen */}
-        <div className="absolute inset-x-[24%] top-[30%] h-1 rounded-full bg-gradient-to-r from-transparent via-white/40 to-transparent blur-[1px]" />
+        <div className="absolute inset-x-[24%] top-[30%] h-1 rounded-full bg-gradient-to-r from-transparent via-white/25 to-transparent blur-[1.5px]" />
         {/* soft contact shadow */}
         <div className="absolute inset-x-[20%] top-[85%] h-2 rounded-[50%] bg-black/40 blur-md" />
       </motion.div>
 
-      {/* soft reflection of the character, blurred mirror beneath the shoes */}
+      {/* stronger reflection of the character, blurred mirror beneath the shoes */}
       <div
-        className="pointer-events-none absolute top-full left-1/2 h-full w-full -translate-x-1/2 opacity-25 blur-sm"
+        className="pointer-events-none absolute top-full left-1/2 h-full w-full -translate-x-1/2 opacity-40 blur-sm"
         style={{
-          maskImage: "linear-gradient(to bottom, rgba(0,0,0,0.45), transparent 40%)",
-          WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,0.45), transparent 40%)",
+          maskImage: "linear-gradient(to bottom, rgba(0,0,0,0.55), transparent 45%)",
+          WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,0.55), transparent 45%)",
         }}
       >
         {!imgFailed && (
@@ -158,7 +121,7 @@ export default function HeroCharacter({ parallaxX, parallaxY }: HeroCharacterPro
         )}
       </div>
 
-      {/* character, depth layer 3: fades in with a scale pop at 1200ms */}
+      {/* character, camera-parallax layer: fades in with a scale pop at 1200ms */}
       <motion.div
         className="relative h-full w-full"
         style={{ x: characterX, y: characterY }}
@@ -168,7 +131,7 @@ export default function HeroCharacter({ parallaxX, parallaxY }: HeroCharacterPro
       >
         {/* float: independent vertical bob */}
         <div className="animate-float relative h-full w-full">
-          {/* sway: -18deg to +18deg yaw, 8s ease-in-out infinite alternate */}
+          {/* sway: -12deg to +12deg yaw, 8s ease-in-out infinite alternate */}
           <div
             className="animate-hero-sway relative h-full w-full"
             style={{ transformStyle: "preserve-3d" }}
@@ -178,27 +141,21 @@ export default function HeroCharacter({ parallaxX, parallaxY }: HeroCharacterPro
               className="animate-hero-breathe relative h-full w-full"
               style={{ transformStyle: "preserve-3d" }}
             >
-              {/* mouse parallax: spring-eased tilt, disabled under reduced motion */}
-              <motion.div
-                className="relative h-full w-full"
-                style={{
-                  transformStyle: "preserve-3d",
-                  rotateX: springRotateX,
-                  rotateY: springRotateY,
-                }}
-              >
-                {imgFailed ? (
-                  <PlaceholderSilhouette />
-                ) : (
-                  <img
-                    src={portraitSrc}
-                    alt="Muaz Ramzi — Software Engineer, in a formal suit holding a laptop"
-                    className="relative z-10 h-full w-full select-none object-contain object-bottom drop-shadow-[0_30px_40px_rgba(0,0,0,0.55)]"
-                    draggable={false}
-                    onError={() => setImgFailed(true)}
-                  />
-                )}
-              </motion.div>
+              {imgFailed ? (
+                <PlaceholderSilhouette />
+              ) : (
+                <img
+                  src={portraitSrc}
+                  alt="Muaz Ramzi — Software Engineer, in a formal suit holding a laptop"
+                  className="relative z-10 h-full w-full select-none object-contain object-bottom"
+                  draggable={false}
+                  onError={() => setImgFailed(true)}
+                  style={{
+                    filter:
+                      "drop-shadow(0 0 14px rgba(96,165,250,0.55)) drop-shadow(0 30px 40px rgba(0,0,0,0.55))",
+                  }}
+                />
+              )}
             </div>
           </div>
         </div>
