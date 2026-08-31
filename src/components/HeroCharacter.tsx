@@ -6,12 +6,24 @@ import { ENTRANCE_EASE } from "../lib/motion"
 
 // camera-parallax movement budgets, in px, for this component's two layers —
 // the camera moves, not the body: pure translation, never rotation
-const CHARACTER_MOVE = 6
+const CHARACTER_MOVE = 4
 const RING_MOVE = 10
 
 // platform's resting offset and how far it rises in on entrance
 const PLATFORM_Y = -12
 const PLATFORM_RISE = 14
+
+// Saturn-style orbit ring: small ellipse at waist height, split into a back
+// half (drawn behind the character) and a front half (drawn in front), so
+// the ring visually passes through the body instead of floating behind it.
+// Sized to stay inside the character's shoulder width — tune RING_RX if the
+// portrait asset changes.
+const RING_CX = 215
+const RING_CY = 232
+const RING_RX = 40
+const RING_RY = 10
+const RING_BACK_ARC = `M ${RING_CX - RING_RX},${RING_CY} A ${RING_RX},${RING_RY} 0 0 0 ${RING_CX + RING_RX},${RING_CY}`
+const RING_FRONT_ARC = `M ${RING_CX - RING_RX},${RING_CY} A ${RING_RX},${RING_RY} 0 0 1 ${RING_CX + RING_RX},${RING_CY}`
 
 type HeroCharacterProps = {
   parallaxX: MotionValue<number>
@@ -35,7 +47,7 @@ export default function HeroCharacter({ parallaxX, parallaxY }: HeroCharacterPro
       }`}
       style={{ perspective: "1400px" }}
     >
-      {/* orbit ring, camera-parallax layer: around the waist, spins opposite the sway, draws itself in at 900ms */}
+      {/* orbit ring — back half, rendered behind the character */}
       <motion.div
         className="pointer-events-none absolute inset-0 h-full w-full"
         style={{ x: ringX, y: ringY }}
@@ -43,19 +55,16 @@ export default function HeroCharacter({ parallaxX, parallaxY }: HeroCharacterPro
         <svg
           viewBox="0 0 400 400"
           preserveAspectRatio="none"
-          className="animate-spin-slow-reverse h-full w-full"
-          style={{ filter: "drop-shadow(0 0 6px rgba(96,165,250,0.45))" }}
+          className="animate-orbit-ring h-full w-full"
+          style={{ filter: "drop-shadow(0 0 5px rgba(96,165,250,0.3))" }}
         >
-          <motion.ellipse
-            cx="200"
-            cy="232"
-            rx="176"
-            ry="34"
+          <motion.path
+            d={RING_BACK_ARC}
             fill="none"
             stroke="var(--color-accent-soft)"
             strokeWidth="1.5"
             initial={{ pathLength: 0, opacity: 0 }}
-            animate={{ pathLength: 1, opacity: 0.35 }}
+            animate={{ pathLength: 1, opacity: 0.12 }}
             transition={{ delay: 0.9, duration: 1.1, ease: ENTRANCE_EASE }}
           />
         </svg>
@@ -71,12 +80,12 @@ export default function HeroCharacter({ parallaxX, parallaxY }: HeroCharacterPro
         }}
       />
 
-      {/* soft radial backlight behind the character — feathered, no visible boundary */}
+      {/* soft radial backlight, centered behind the torso — feathered, no visible boundary */}
       <div
-        className="pointer-events-none absolute top-1/2 left-1/2 h-[95%] w-[95%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[70px]"
+        className="pointer-events-none absolute top-1/2 left-1/2 h-[70%] w-[70%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[120px]"
         style={{
           background:
-            "radial-gradient(circle, rgba(59,130,246,0.22) 0%, rgba(59,130,246,0.08) 45%, transparent 72%)",
+            "radial-gradient(circle, rgba(59,130,246,0.2) 0%, rgba(59,130,246,0.08) 45%, transparent 72%)",
         }}
       />
 
@@ -88,8 +97,8 @@ export default function HeroCharacter({ parallaxX, parallaxY }: HeroCharacterPro
         animate={{ opacity: 1, y: PLATFORM_Y }}
         transition={{ delay: 0.6, duration: 0.7, ease: ENTRANCE_EASE }}
       >
-        {/* ambient blue glow beneath */}
-        <div className="absolute inset-0 rounded-[50%] bg-accent/20 blur-2xl" />
+        {/* ambient blue glow beneath, soft pulse */}
+        <div className="animate-platform-pulse absolute inset-0 rounded-[50%] bg-accent/20 blur-2xl" />
         {/* glass disc edge — softened, wider glow, lower opacity */}
         <div
           className="absolute inset-x-[10%] top-1/2 h-3.5 -translate-y-1/2 rounded-[50%] border border-accent-soft/25 bg-white/[0.05] blur-[1px]"
@@ -131,7 +140,7 @@ export default function HeroCharacter({ parallaxX, parallaxY }: HeroCharacterPro
       >
         {/* float: independent vertical bob */}
         <div className="animate-float relative h-full w-full">
-          {/* sway: -12deg to +12deg yaw, 8s ease-in-out infinite alternate */}
+          {/* sway: -8deg to +8deg yaw, 8s ease-in-out infinite alternate */}
           <div
             className="animate-hero-sway relative h-full w-full"
             style={{ transformStyle: "preserve-3d" }}
@@ -159,6 +168,29 @@ export default function HeroCharacter({ parallaxX, parallaxY }: HeroCharacterPro
             </div>
           </div>
         </div>
+      </motion.div>
+
+      {/* orbit ring — front half, rendered in front of the character */}
+      <motion.div
+        className="pointer-events-none absolute inset-0 h-full w-full"
+        style={{ x: ringX, y: ringY }}
+      >
+        <svg
+          viewBox="0 0 400 400"
+          preserveAspectRatio="none"
+          className="animate-orbit-ring h-full w-full"
+          style={{ filter: "drop-shadow(0 0 6px rgba(96,165,250,0.45))" }}
+        >
+          <motion.path
+            d={RING_FRONT_ARC}
+            fill="none"
+            stroke="var(--color-accent-soft)"
+            strokeWidth="1.5"
+            initial={{ pathLength: 0, opacity: 0 }}
+            animate={{ pathLength: 1, opacity: 0.25 }}
+            transition={{ delay: 0.9, duration: 1.1, ease: ENTRANCE_EASE }}
+          />
+        </svg>
       </motion.div>
 
       {/* floating particles */}
