@@ -74,10 +74,10 @@
   }
   @keyframes hero-sway {
     from {
-      transform: rotateY(-18deg);
+      transform: rotateY(-12deg);
     }
     to {
-      transform: rotateY(18deg);
+      transform: rotateY(12deg);
     }
   }
   @keyframes hero-breathe {
