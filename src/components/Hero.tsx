@@ -14,6 +14,24 @@ const PARALLAX_SPRING = { stiffness: 120, damping: 20, mass: 0.6 }
 const WORDMARK_MOVE = 2
 const GRID_MOVE = 4
 
+// technical-blueprint background dressing — deliberately understated
+const BLUEPRINT_LABELS = [
+  { text: "X: 1024", top: "14%", left: "6%" },
+  { text: "Y: 768", top: "17%", left: "6%" },
+  { text: "GRID_01", top: "46%", left: "8%" },
+  { text: "NODE_03", top: "38%", right: "8%" },
+  { text: "SYS_02", bottom: "18%", left: "4%" },
+  { text: "480", bottom: "14%", right: "6%" },
+]
+
+const BLUEPRINT_DATA_POINTS = [
+  { top: "22%", left: "18%", delay: "0s" },
+  { top: "62%", left: "12%", delay: "1.2s" },
+  { top: "30%", left: "80%", delay: "0.6s" },
+  { top: "70%", left: "72%", delay: "1.8s" },
+  { top: "50%", left: "30%", delay: "2.4s" },
+]
+
 export default function Hero() {
   const reducedMotion = usePrefersReducedMotion()
   const sectionRef = useRef<HTMLElement>(null)
@@ -49,14 +67,60 @@ export default function Hero() {
       onMouseLeave={handleMouseLeave}
       className="relative flex min-h-screen items-center overflow-hidden pt-24"
     >
-      {/* background: grid texture (depth layer 2) + noise, fades in on load */}
+      {/* background: technical blueprint grid + dressing (depth layer 2), fades in on load */}
       <motion.div
-        className="grid-overlay absolute inset-0 [mask-image:radial-gradient(ellipse_at_center,black,transparent_75%)]"
+        className="absolute inset-0 [mask-image:radial-gradient(ellipse_at_center,black,transparent_75%)]"
         style={{ x: gridX, y: gridY }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1.2, ease: ENTRANCE_EASE }}
-      />
+      >
+        <div className="blueprint-grid absolute inset-0" />
+
+        {BLUEPRINT_LABELS.map((label) => (
+          <span
+            key={label.text}
+            className="absolute font-mono text-[10px] tracking-wider text-accent-soft/25"
+            style={{ top: label.top, bottom: label.bottom, left: label.left, right: label.right }}
+          >
+            {label.text}
+          </span>
+        ))}
+
+        <svg
+          aria-hidden
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          className="absolute bottom-[22%] left-[5%] h-6 w-6 text-accent-soft/25"
+        >
+          <circle cx="12" cy="12" r="6" strokeWidth="1" />
+          <line x1="12" y1="0" x2="12" y2="24" strokeWidth="1" />
+          <line x1="0" y1="12" x2="24" y2="12" strokeWidth="1" />
+        </svg>
+
+        <svg
+          aria-hidden
+          viewBox="0 0 64 12"
+          fill="none"
+          stroke="currentColor"
+          className="absolute right-[9%] bottom-[16%] h-3 w-16 text-accent-soft/20"
+        >
+          <line x1="0" y1="6" x2="64" y2="6" strokeWidth="1" />
+          <line x1="0" y1="2" x2="0" y2="10" strokeWidth="1" />
+          <line x1="64" y1="2" x2="64" y2="10" strokeWidth="1" />
+        </svg>
+
+        {BLUEPRINT_DATA_POINTS.map((point, i) => (
+          <span
+            key={i}
+            className="animate-data-drift absolute h-1 w-1 rounded-full bg-accent-soft"
+            style={{ top: point.top, left: point.left, animationDelay: point.delay }}
+          />
+        ))}
+      </motion.div>
+
+      <div className="blueprint-vignette pointer-events-none absolute inset-0" />
       <div className="noise-overlay animate-noise" />
 
       {/* huge background wordmark (depth layer 1), part of the 0ms background reveal */}
