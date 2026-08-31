@@ -16,8 +16,11 @@ const PLATFORM_RISE = 14
 // Saturn-style orbit ring: small ellipse at waist height, split into a back
 // half (drawn behind the character) and a front half (drawn in front), so
 // the ring visually passes through the body instead of floating behind it.
-// Sized to stay inside the character's shoulder width — tune RING_RX if the
-// portrait asset changes.
+// All four constants were derived empirically for this specific
+// character.png — RING_CX is off-center from the viewBox midpoint (200)
+// because the actual shoulder midpoint was measured via a canvas
+// alpha-channel scan, not assumed. Re-measure all four if the portrait
+// asset is ever re-cropped or replaced.
 const RING_CX = 215
 const RING_CY = 232
 const RING_RX = 40
