@@ -29,6 +29,8 @@ strong_bg = np.all(arr >= WHITE_THRESHOLD, axis=2)
 # Restricted to the bottom of the frame (where the shoe shadow actually is):
 # an unrestricted neutral/near-white threshold also matches the white shirt,
 # which then leaked through the underarm gap and got cut out as "background".
+# The 0.75 cutoff is hand-tuned to this photo's shadow position, same caveat
+# as WHITE_THRESHOLD above — re-check it if the source photo changes.
 height = arr.shape[0]
 in_shadow_zone = np.zeros(arr.shape[:2], dtype=bool)
 in_shadow_zone[int(height * 0.75) :, :] = True
@@ -40,6 +42,9 @@ combined = strong_bg | shadow_candidate
 # otherwise connect the true background to interior near-white regions like
 # the shirt and get them wrongly cut out too. Dilate the confirmed background
 # back out afterward to restore its real extent.
+# picked empirically (verified by scanning for zero interior alpha holes
+# afterward), not derived from anything measurable about the photo — a wider
+# leak gap in a future source photo may need a larger value here.
 EROSION_ITERS = 3
 eroded = ndimage.binary_erosion(combined, iterations=EROSION_ITERS, border_value=1)
 
